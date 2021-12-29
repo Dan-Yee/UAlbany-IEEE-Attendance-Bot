@@ -1,19 +1,18 @@
-Attendance Data for: outtest
-Voice Channel: Presentation
+Attendance Data for: Final Test
+Voice Channel: Bruh
 
-Start Time: 2021-12-29 12:20:39.285291
-Stop Time: 2021-12-29 12:20:50.035783
-Total Runtime: 0:00:10.750492
+Start Time: 2021-12-29 12:41:50.132289
+Stop Time: 2021-12-29 12:42:06.769178
+Total Runtime: 0:00:16.636889
 
 ==================================================
 Member: DabbyDann#XXXX
 Nickname: Dan Yee
 
 Join Time(s):
-	2021-12-29 12:20:42.996452
+	2021-12-29 12:41:52.011787
 Leave Time(s):
-	2021-12-29 12:20:44.711656
+	2021-12-29 12:42:06.769178
 
-Estimated Attendance Time (Last Leave): 0:00:01.715204
-Estimated Attendance Time (Stop Time): 0:00:07.039331
+Estimated Attendance Time (Last Leave): 0:00:14.757391
 ==================================================
