@@ -1,0 +1,19 @@
+Attendance Data for: outtest
+Voice Channel: Presentation
+
+Start Time: 2021-12-29 12:20:39.285291
+Stop Time: 2021-12-29 12:20:50.035783
+Total Runtime: 0:00:10.750492
+
+==================================================
+Member: DabbyDann#XXXX
+Nickname: Dan Yee
+
+Join Time(s):
+	2021-12-29 12:20:42.996452
+Leave Time(s):
+	2021-12-29 12:20:44.711656
+
+Estimated Attendance Time (Last Leave): 0:00:01.715204
+Estimated Attendance Time (Stop Time): 0:00:07.039331
+==================================================
