@@ -164,10 +164,8 @@ async def stop(ctx, *, title):
 
                 if(len(entry.joinTimes) != 0 and len(entry.leaveTimes) != 0):
                     attendanceData.write("\nEstimated Attendance Time (Last Leave): " + str(entry.leaveTimes[-1] - entry.joinTimes[0]) + "\n")
-                    attendanceData.write("Estimated Attendance Time (Stop Time): " + str(stopTime - entry.joinTimes[0]) + "\n")
                 else:
                     attendanceData.write("\nEstimated Attendance Time (Last Leave): " + str(stopTime - entry.joinTimes[0]) + "\n")
-                    attendanceData.write("Estimated Attendance Time (Stop Time): " + str(stopTime - entry.joinTimes[0]) + "\n")
                 attendanceData.write("==================================================\n")
             
             isListening = False
