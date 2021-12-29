@@ -158,8 +158,8 @@ async def stop(ctx, *, title):
                     attendanceData.write("\t" + str(joinTime) + "\n")
                 attendanceData.write("Leave Time(s):\n")
 
-                if(len(entry.leaveTimes) == 0):                                                                 # automatically append an leave time if the user never left since the bot stopped listening
-                    recordedUsers[entry.userIDNumber].leaveTimes.append(stopTime)
+                if((len(entry.leaveTimes) == 0) or (len(entry.joinTimes) > len(entry.leaveTimes))):              # automatically append an leave time if the user never left since the bot stopped listening
+                    recordedUsers[entry.userIDNumber].leaveTimes.append(stopTime)                                # if join list is longer than leave list, user has disconnected and reconnected but didn't leave before the bot stopped listening
 
                 for leaveTime in entry.leaveTimes:
                     attendanceData.write("\t" + str(leaveTime) + "\n")
