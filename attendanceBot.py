@@ -157,15 +157,14 @@ async def stop(ctx, *, title):
                 for joinTime in entry.joinTimes:
                     attendanceData.write("\t" + str(joinTime) + "\n")
                 attendanceData.write("Leave Time(s):\n")
+
+                if(len(entry.leaveTimes) == 0):                                                                 # automatically append an leave time if the user never left since the bot stopped listening
+                    recordedUsers[entry.userIDNumber].leaveTimes.append(stopTime)
+
                 for leaveTime in entry.leaveTimes:
                     attendanceData.write("\t" + str(leaveTime) + "\n")
-                if(len(entry.leaveTimes) == 0):
-                    attendanceData.write("\t" + str(stopTime) + "\n")
 
-                if(len(entry.joinTimes) != 0 and len(entry.leaveTimes) != 0):
-                    attendanceData.write("\nEstimated Attendance Time (Last Leave): " + str(entry.leaveTimes[-1] - entry.joinTimes[0]) + "\n")
-                else:
-                    attendanceData.write("\nEstimated Attendance Time (Last Leave): " + str(stopTime - entry.joinTimes[0]) + "\n")
+                attendanceData.write("\nEstimated Attendance Time: " + str(entry.leaveTimes[-1] - entry.joinTimes[0]) + "\n")
                 attendanceData.write("==================================================\n")
             
             isListening = False
