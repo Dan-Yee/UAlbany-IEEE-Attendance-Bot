@@ -1,19 +1,18 @@
 Attendance Data for: test
 Voice Channel: Bruh
 
-Start Time: 2021-12-29 13:42:08.328789
-Stop Time: 2021-12-29 13:42:15.044760
-Total Runtime: 0:00:06.715971
+Start Time: 2021-12-29 15:28:04.473465
+Stop Time: 2021-12-29 15:28:11.967956
+Total Runtime: 0:00:07.494491
 
 ==================================================
 Member: DabbyDann#XXXX
 Nickname: Dan Yee
 
 Join Time(s):
-	2021-12-29 13:42:08.331792
-	2021-12-29 13:42:11.991754
+	2021-12-29 15:28:06.470964
 Leave Time(s):
-	2021-12-29 13:42:11.238974
+	2021-12-29 15:28:09.230925
 
-Estimated Attendance Time: 0:00:02.907182
+Estimated Attendance Time: 0:00:02.759961
 ==================================================
