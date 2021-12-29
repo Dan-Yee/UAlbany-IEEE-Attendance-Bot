@@ -4,19 +4,29 @@ intents = discord.Intents.default()
 intents.members = True
 
 from discord.ext import commands
-from discord.ext.commands.errors import MissingRequiredArgument
+from discord.ext.commands.errors import MissingRequiredArgument, CommandNotFound
 
 import os
 from dotenv import load_dotenv, find_dotenv
 
 import datetime
 
-isListening = False
-channelName = ""
-recordedUsers = []
-attendanceData = ""
-startTime = ""
-stopTime = ""
+"""
+Class to represent a user on Discord and store join times and leave times
+"""
+class DiscordUser:
+    def __init__(self, userIDNumber: int):
+        self.userIDNumber = userIDNumber
+        self.joinTimes = []
+        self.leaveTimes = []
+
+isListening = False                                                                                             # is the bot listening to attendance right now
+channelName = None                                                                                              # name of voice channel being listened to
+recordedUsers = dict()                                                                                          # accumulation of recorded users in a dictionary
+IEEEKnownUsers = dict()                                                                                         # dictionary to track previously seen users before to improve runtime for getting nicknames
+attendanceData = None                                                                                           # instantiate global for data file use later
+startTime = None                                                                                                # date-time stamp of when #start was run
+stopTime = None                                                                                                 # date-time stamp of when #stop was run
 
 IEEEVoiceChannels = {
     "PRESENTATION" : 693685771865161778,
@@ -32,15 +42,6 @@ whitelistedUsers = {
     224552342438150144
 }
 
-"""
-Class to represent a user on Discord and store join times and leave times
-"""
-class DiscordUser:
-    def __init__(self, userIDNumber: int):
-        self.userIDNumber = userIDNumber
-        self.joinTimes = []
-        self.leaveTimes = []
-
 load_dotenv(find_dotenv())
 TOKEN = os.environ.get('BOT_TOKEN')
 
@@ -49,41 +50,33 @@ bot = commands.Bot(command_prefix = "#", activity = activity, status = discord.S
 bot.remove_command("help")
 
 """
-Logs the attendance data whenever someone joins or leaves
+Event the notify the user of an unknown command being used
+"""
+@bot.event
+async def on_command_error(ctx, error):
+    if(isinstance(error, CommandNotFound)):
+        await ctx.send("Unknown command")
+        await ctx.send("Valid commands are: start, stop, get, whitelist, unwhitelist")
+
+"""
+Logs the attendance data whenever someone joins or leaves the specific voice channel
 """
 @bot.event
 async def on_voice_state_update(member, before, after):
     global recordedUsers
-    isNewRecord = False
-    recordIndex = 0
-    joinTime = str(datetime.datetime.now())
 
     if(isListening):
-        if(str(after.channel).upper() == channelName):                                              # user joined specific channel
-            if(len(recordedUsers) != 0):                                                            # case if the voice channel was empty when the command was run
-                for user in recordedUsers:                                                          # checks if user record already exists
-                    if(user.userIDNumber != member.id):
-                        isNewRecord = True
-                    else:
-                        recordIndex = recordedUsers.index(user)
-                        isNewRecord = False
-                        break
-            else:
-                isNewRecord = True;
+        joinTime = datetime.datetime.now()
+        leaveTime = datetime.datetime.now()
 
-            if(isNewRecord):                                                                        # creates a new record for the user and notes their join time
-                recordedUsers.append(DiscordUser(member.id))
-                recordedUsers[len(recordedUsers) - 1].joinTimes.append(joinTime)
-                isNewRecord = False
+        if(str(after.channel).upper() == channelName):                                                          # user joined specific channel
+            if(recordedUsers.get(member.id) is not None):
+                recordedUsers[member.id].joinTimes.append(joinTime)
             else:
-                recordedUsers[recordIndex].joinTimes.append(joinTime)
-        elif(str(before.channel).upper() == channelName and after.channel is None):                 # user left specific channel
-            leaveTime = str(datetime.datetime.now())
-
-            for user in recordedUsers:
-                if(user.userIDNumber == member.id):
-                    user.leaveTimes.append(leaveTime)
-                    break                                                              
+                recordedUsers[member.id] = DiscordUser(member.id)
+                recordedUsers[member.id].joinTimes.append(joinTime)
+        elif(str(before.channel).upper() == channelName):                                                       # user left or switched out of specific channel
+            recordedUsers[member.id].leaveTimes.append(leaveTime)                                                            
 
 """
 Starts listening for attendance on a specified channel
@@ -95,7 +88,7 @@ async def start(ctx, *, channel):
     global attendanceData
     global startTime
 
-    if(ctx.author.id in whitelistedUsers):
+    if(ctx.author.id in whitelistedUsers):                                                                      # check for permission
         if(not isListening):
             channelName = channel.upper()
             listeningChannel = bot.get_channel(IEEEVoiceChannels.get(channelName))
@@ -105,20 +98,17 @@ async def start(ctx, *, channel):
             if(listeningChannel is not None):
                 isListening = True
 
-                # Records users already in channel before #start command was run
-                for user in listeningChannel.members:
-                    recordedUsers.append(DiscordUser(user.id))
-        
-                joinTime = str(datetime.datetime.now())
-                for user in recordedUsers:
-                    user.joinTimes.append(joinTime)
+                joinTime = datetime.datetime.now()
+                for user in listeningChannel.members:                                                           # Records users already in channel before #start command was run
+                    recordedUsers[user.id] = DiscordUser(user.id)
+                    recordedUsers[user.id].joinTimes.append(joinTime)
 
-                await ctx.send("Listening for attendance in Voice Channel: {}".format(channel))
+                await ctx.send("Listening for attendance in voice channel: {}".format(channel.title()))
                 await bot.change_presence(activity = discord.Activity(type = discord.ActivityType.listening, name = "attendance"))
             else:
-                await ctx.send("Voice Channel, {}, not found!".format(channel))
+                await ctx.send("Voice channel, {}, not found!".format(channel.title()))
         else:
-            await ctx.send("Listening already in progress in Voice Channel: {}".format(channel))
+            await ctx.send("Listening already in progress in voice channel: {}".format(channelName.title()))
     else:
         await ctx.send("Permission denied")
 
@@ -138,38 +128,57 @@ async def stop(ctx, *, title):
     global attendanceData
     global startTime
     global stopTime
-    
-    if(ctx.author.id in whitelistedUsers):
+    global IEEEKnownUsers
+
+    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
         if(isListening):
-            isListening = False
-            channelName = ""
             stopTime = datetime.datetime.now()
 
-            attendanceData.write("Attendance Data for: " + title + "\n")
-            attendanceData.write("Start Time: " + str(startTime) + "\n")
+            attendanceData.write("Attendance Data for: " + title + "\n")                                        # writes attendance header data
+            attendanceData.write("Voice Channel: " + channelName.title() + "\n")
+            attendanceData.write("\nStart Time: " + str(startTime) + "\n")
             attendanceData.write("Stop Time: " + str(stopTime) + "\n")
             attendanceData.write("Total Runtime: " + str(stopTime - startTime) + "\n")
             attendanceData.write("\n==================================================\n")
 
-            for entry in recordedUsers:
+            for entry in recordedUsers.values():                                                                # writes each record of data to file
                 attendanceData.write("Member: " + str(bot.get_user(entry.userIDNumber)) + "\n")
-                attendanceData.write("Join Times:\n")
+
+                if(IEEEKnownUsers.get(entry.userIDNumber) is not None):                                         # optimize by checking a dictionary of previously recorded members
+                    attendanceData.write("Nickname: " + str(IEEEKnownUsers.get(entry.userIDNumber)) + "\n\n")
+                else:                                                                                           # loop through all members of "UAlbany IEEE" server to find user nickname
+                    for member in bot.get_guild(685303775052693515).members:
+                        if(member.id == entry.userIDNumber):
+                            attendanceData.write("Nickname: " + str(member.display_name) + "\n\n")
+                            IEEEKnownUsers[entry.userIDNumber] = str(member.display_name)
+                            break
+
+                attendanceData.write("Join Time(s):\n")
                 for joinTime in entry.joinTimes:
                     attendanceData.write("\t" + str(joinTime) + "\n")
-                attendanceData.write("Leave Times:\n")
+                attendanceData.write("Leave Time(s):\n")
                 for leaveTime in entry.leaveTimes:
                     attendanceData.write("\t" + str(leaveTime) + "\n")
                 if(len(entry.leaveTimes) == 0):
                     attendanceData.write("\t" + str(stopTime) + "\n")
+
+                if(len(entry.joinTimes) != 0 and len(entry.leaveTimes) != 0):
+                    attendanceData.write("\nEstimated Attendance Time (Last Leave): " + str(entry.leaveTimes[-1] - entry.joinTimes[0]) + "\n")
+                    attendanceData.write("Estimated Attendance Time (Stop Time): " + str(stopTime - entry.joinTimes[0]) + "\n")
+                else:
+                    attendanceData.write("\nEstimated Attendance Time (Last Leave): " + str(stopTime - entry.joinTimes[0]) + "\n")
+                    attendanceData.write("Estimated Attendance Time (Stop Time): " + str(stopTime - entry.joinTimes[0]) + "\n")
                 attendanceData.write("==================================================\n")
             
+            isListening = False
+            channelName = ""
             recordedUsers.clear()
             attendanceData.close()
 
             await ctx.send("Attendance data saved as: {}".format(title))
             await ctx.send("Attendance data sent to {}".format(ctx.author.mention))
 
-            with open("attendance.txt", "rb") as file:
+            with open("attendance.txt", "rb") as file:                                                          # sends the file to the author who ran the command through DM
                 await ctx.author.send("Attendance File: ", file = discord.File(file, "attendance.txt"))
                 file.close()
             await bot.change_presence(activity = discord.Activity(type = discord.ActivityType.listening, name = "#start"))
@@ -188,8 +197,8 @@ Sends the most recent attendance data file to the command author if they have pe
 """
 @bot.command(name = "get")
 async def get(ctx):
-    if(ctx.author.id in whitelistedUsers):
-        with open("attendance.txt", "rb") as file:
+    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
+        with open("attendance.txt", "rb") as file:                                                              # sends the most recent file to the author who ran the command through DM
             await ctx.send("Attendance data sent to {}".format(ctx.author.mention))
             await ctx.author.send("Attendance File: ", file = discord.File(file, "attendance.txt"))
             file.close()
@@ -203,7 +212,7 @@ Give a user permission to run bot commands
 async def whitelist(ctx, userID):
     global whitelistedUsers
 
-    if(ctx.author.id in whitelistedUsers):
+    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
         if(int(userID) in whitelistedUsers):
             await ctx.send("{} is already whitelisted".format(bot.get_user(int(userID))))
         elif(bot.get_user(int(userID)) is not None):
@@ -226,13 +235,13 @@ Remove a users permission to run bot commands
 async def unwhitelist(ctx, userID):
     global whitelistedUsers
 
-    if(ctx.author.id in whitelistedUsers):
+    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
         if(bot.get_user(int(userID)) is not None):
             if(int(userID) not in whitelistedUsers):
-                await ctx.send("{} is not in the whitelist".format(bot.get_user(int(userID))))
+                await ctx.send("{} is not on the whitelist".format(bot.get_user(int(userID))))
             elif(str(ctx.author.id) == userID.strip()):
                 await ctx.send("You cannot remove yourself from the whitelist")
-            elif(str(274354935036903424) == userID.strip() or str(224552342438150144) == userID.strip()):
+            elif(str(274354935036903424) == userID.strip() or str(224552342438150144) == userID.strip()):       # Special Case: Cannot remove two users: Server Owner and Bot Author
                 await ctx.send("{} cannot be removed from the whitelist".format(bot.get_user(int(userID))))
             else:
                 whitelistedUsers.remove(int(userID))
