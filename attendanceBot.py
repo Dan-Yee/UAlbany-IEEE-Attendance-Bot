@@ -69,14 +69,14 @@ async def on_voice_state_update(member, before, after):
         joinTime = datetime.datetime.now()
         leaveTime = datetime.datetime.now()
 
-        if(str(after.channel).upper() == channelName):                                                          # user joined specific channel
+        if(str(after.channel).upper() == channelName and (str(before.channel).upper() != str(after.channel).upper())):                                                          # user joined specific channel
             if(recordedUsers.get(member.id) is not None):
                 recordedUsers[member.id].joinTimes.append(joinTime)
             else:
                 recordedUsers[member.id] = DiscordUser(member.id)
                 recordedUsers[member.id].joinTimes.append(joinTime)
-        elif(str(before.channel).upper() == channelName):                                                       # user left or switched out of specific channel
-            recordedUsers[member.id].leaveTimes.append(leaveTime)                                                            
+        elif(str(before.channel).upper() == channelName and (str(before.channel).upper() != str(after.channel).upper())):                                                       # user left or switched out of specific channel
+            recordedUsers[member.id].leaveTimes.append(leaveTime)                                                           
 
 """
 Starts listening for attendance on a specified channel
