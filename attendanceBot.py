@@ -59,7 +59,7 @@ async def on_command_error(ctx, error):
         await ctx.send("Valid commands are: start, stop, get, whitelist, unwhitelist")
 
 """
-Logs the attendance data whenever someone joins or leaves the specific voice channel
+Logs the attendance data whenever someone joins or leaves the specific voice channel, ignoring other voice state updates
 """
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -69,14 +69,18 @@ async def on_voice_state_update(member, before, after):
         joinTime = datetime.datetime.now()
         leaveTime = datetime.datetime.now()
 
-        if(str(after.channel).upper() == channelName and (str(before.channel).upper() != str(after.channel).upper())):                                                          # user joined specific channel
-            if(recordedUsers.get(member.id) is not None):
-                recordedUsers[member.id].joinTimes.append(joinTime)
-            else:
-                recordedUsers[member.id] = DiscordUser(member.id)
-                recordedUsers[member.id].joinTimes.append(joinTime)
-        elif(str(before.channel).upper() == channelName and (str(before.channel).upper() != str(after.channel).upper())):                                                       # user left or switched out of specific channel
-            recordedUsers[member.id].leaveTimes.append(leaveTime)                                                           
+        # user joined specific channel
+        # if before channel is the same as after channel, some other* voice state was changed (* other voice states are: mute, deaf, self_mute, self_deaf, and others)
+        if((str(before.channel).upper() != str(after.channel).upper())):
+            if(str(after.channel).upper() == channelName):
+                if(recordedUsers.get(member.id) is not None):
+                    recordedUsers[member.id].joinTimes.append(joinTime)
+                else:
+                    recordedUsers[member.id] = DiscordUser(member.id)
+                    recordedUsers[member.id].joinTimes.append(joinTime)
+            # user left or switched out of specific channel
+            elif(str(before.channel).upper() == channelName):
+                recordedUsers[member.id].leaveTimes.append(leaveTime)                                                           
 
 """
 Starts listening for attendance on a specified channel
