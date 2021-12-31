@@ -1,18 +1,20 @@
 Attendance Data for: test
-Voice Channel: Officers Voice
+Voice Channel: Bruh
 
-Start Time: 2021-12-30 12:53:44.863746
-Stop Time: 2021-12-30 12:53:53.701769
-Total Runtime: 0:00:08.838023
+Start Time: 2021-12-30 23:00:25.628626
+Stop Time: 2021-12-30 23:00:52.135506
+Total Runtime: 0:00:26.506880
 
 ==================================================
 Member: DabbyDann#XXXX
 Nickname: Dan Yee
 
 Join Time(s):
-	2021-12-30 12:53:44.866749
+	2021-12-30 23:00:27.190008
+	2021-12-30 23:00:46.737501
 Leave Time(s):
-	2021-12-30 12:53:53.701769
+	2021-12-30 23:00:44.900284
+	2021-12-30 23:00:52.135506
 
-Estimated Attendance Time: 0:00:08.835020
+Estimated Attendance Time: 0:00:24.945498
 ==================================================
