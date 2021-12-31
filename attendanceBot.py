@@ -69,17 +69,15 @@ async def on_voice_state_update(member, before, after):
         joinTime = datetime.datetime.now()
         leaveTime = datetime.datetime.now()
 
-        # user joined specific channel
         # if before channel is the same as after channel, some other* voice state was changed (* other voice states are: mute, deaf, self_mute, self_deaf, and others)
         if((str(before.channel).upper() != str(after.channel).upper())):
-            if(str(after.channel).upper() == channelName):
+            if(str(after.channel).upper() == channelName):                                                      # user joined specific channel
                 if(recordedUsers.get(member.id) is not None):
                     recordedUsers[member.id].joinTimes.append(joinTime)
                 else:
                     recordedUsers[member.id] = DiscordUser(member.id)
                     recordedUsers[member.id].joinTimes.append(joinTime)
-            # user left or switched out of specific channel
-            elif(str(before.channel).upper() == channelName):
+            elif(str(before.channel).upper() == channelName):                                                   # user left or switched out of specific channel
                 recordedUsers[member.id].leaveTimes.append(leaveTime)                                                           
 
 """
@@ -162,8 +160,8 @@ async def stop(ctx, *, title):
                     attendanceData.write("\t" + str(joinTime) + "\n")
                 attendanceData.write("Leave Time(s):\n")
 
-                if((len(entry.leaveTimes) == 0) or (len(entry.joinTimes) > len(entry.leaveTimes))):              # automatically append an leave time if the user never left since the bot stopped listening
-                    recordedUsers[entry.userIDNumber].leaveTimes.append(stopTime)                                # if join list is longer than leave list, user has disconnected and reconnected but didn't leave before the bot stopped listening
+                if((len(entry.leaveTimes) == 0) or (len(entry.joinTimes) > len(entry.leaveTimes))):             # automatically append an leave time if the user never left since the bot stopped listening
+                    recordedUsers[entry.userIDNumber].leaveTimes.append(stopTime)                               # if join list is longer than leave list, user has disconnected and reconnected but didn't leave before the bot stopped listening
 
                 for leaveTime in entry.leaveTimes:
                     attendanceData.write("\t" + str(leaveTime) + "\n")
