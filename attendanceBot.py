@@ -141,6 +141,7 @@ async def stop(ctx, *, title):
             attendanceData.write("\nStart Time: " + str(startTime) + "\n")
             attendanceData.write("Stop Time: " + str(stopTime) + "\n")
             attendanceData.write("Total Runtime: " + str(stopTime - startTime) + "\n")
+            attendanceData.write("Attendance Count: " + str(len(recordedUsers)) + "\n")
             attendanceData.write("\n==================================================\n")
 
             for entry in recordedUsers.values():                                                                # writes each record of data to file
