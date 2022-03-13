@@ -1,4 +1,3 @@
-from ntpath import join
 import discord
 from discord import user
 
