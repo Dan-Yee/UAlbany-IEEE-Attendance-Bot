@@ -1,15 +1,16 @@
+from ntpath import join
 import discord
 from discord import user
+
 intents = discord.Intents.default()
 intents.members = True
-
 from discord.ext import commands
 from discord.ext.commands.errors import MissingRequiredArgument, CommandNotFound
 
-import os
+import os                                                                                                       
 from dotenv import load_dotenv, find_dotenv
-
-import datetime
+import datetime                                                                                                 # used to get timestamp at a given moment
+import pandas                                                                                                   # used to calculate the average of datetime's
 
 """
 Class to represent a user on Discord and store join times and leave times
@@ -17,8 +18,8 @@ Class to represent a user on Discord and store join times and leave times
 class DiscordUser:
     def __init__(self, userIDNumber: int):
         self.userIDNumber = userIDNumber
-        self.joinTimes = []
-        self.leaveTimes = []
+        self.joinTimes = list()
+        self.leaveTimes = list()
 
 isListening = False                                                                                             # is the bot listening to attendance right now
 channelName = None                                                                                              # name of voice channel being listened to
@@ -167,7 +168,10 @@ async def stop(ctx, *, title):
                 for leaveTime in entry.leaveTimes:
                     attendanceData.write("\t" + str(leaveTime) + "\n")
 
-                attendanceData.write("\nEstimated Attendance Time: " + str(entry.leaveTimes[-1] - entry.joinTimes[0]) + "\n")
+                joinTimeAvg = pandas.Series(entry.joinTimes).mean()                                             # calculate averages of join and leave times for more accurate estimated attendance
+                leaveTimeAvg = pandas.Series(entry.leaveTimes).mean()
+                
+                attendanceData.write("\nEstimated Attendance Time: " + str(leaveTimeAvg - joinTimeAvg)[7:22] + "\n")
                 attendanceData.write("==================================================\n")
             
             isListening = False
