@@ -34,12 +34,12 @@ IEEEVoiceChannels = {
     "PROJECT DEVELOPMENT VOICE" : 771886074456702976,
     "OFFICERS VOICE" : 685319023256141834,
     "EBOARD VOICE" : 903111739892199486,
-    "BRUH" : 912561278575329326
 }
 
 whitelistedUsers = {
     274354935036903424,
-    224552342438150144
+    224552342438150144,
+    587621683448512521
 }
 
 load_dotenv(find_dotenv())
@@ -87,7 +87,6 @@ Starts listening for attendance on a specified channel
 async def start(ctx, *, channel):
     global channelName
     global isListening
-    global attendanceData
     global startTime
 
     if(ctx.author.id in whitelistedUsers):                                                                      # check for permission
@@ -95,7 +94,6 @@ async def start(ctx, *, channel):
             channelName = channel.upper()
             listeningChannel = bot.get_channel(IEEEVoiceChannels.get(channelName))
             startTime = datetime.datetime.now()
-            attendanceData = open("attendance.txt", "w")
 
             if(listeningChannel is not None):
                 isListening = True
@@ -134,6 +132,7 @@ async def stop(ctx, *, title):
 
     if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
         if(isListening):
+            attendanceData = open("attendance.txt", "w")
             stopTime = datetime.datetime.now()
 
             attendanceData.write("Attendance Data for: " + title + "\n")                                        # writes attendance header data
