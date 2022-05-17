@@ -1,9 +1,9 @@
-Attendance Data for: test
-Voice Channel: Bruh
+Attendance Data for: timeTest4
+Voice Channel: Presentation
 
-Start Time: 2022-03-12 23:10:26.245910
-Stop Time: 2022-03-12 23:10:35.429488
-Total Runtime: 0:00:09.183578
+Start Time: 2022-05-17 17:54:56.613640
+Stop Time: 2022-05-17 17:55:22.834039
+Total Runtime: 0:00:26.220399
 Attendance Count: 1
 
 ==================================================
@@ -11,11 +11,11 @@ Member: [Redacted]
 Nickname: Dan Yee
 
 Join Time(s):
-	2022-03-12 23:10:29.178914
-	2022-03-12 23:10:31.434951
+	2022-05-17 17:54:58.566195
+	2022-05-17 17:55:09.479076
 Leave Time(s):
-	2022-03-12 23:10:30.340917
-	2022-03-12 23:10:32.602446
+	2022-05-17 17:55:04.485017
+	2022-05-17 17:55:15.106202
 
-Estimated Attendance Time: 00:00:01.164749
+Estimated Attendance Time: 00:00:11.545948
 ==================================================
