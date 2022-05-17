@@ -9,7 +9,6 @@ from discord.ext.commands.errors import MissingRequiredArgument, CommandNotFound
 import os                                                                                                       
 from dotenv import load_dotenv, find_dotenv
 import datetime                                                                                                 # used to get timestamp at a given moment
-import pandas                                                                                                   # used to calculate the average of datetime's
 
 """
 Class to represent a user on Discord and store join times and leave times
@@ -38,8 +37,7 @@ IEEEVoiceChannels = {
 
 whitelistedUsers = {
     274354935036903424,
-    224552342438150144,
-    587621683448512521
+    224552342438150144
 }
 
 load_dotenv(find_dotenv())
@@ -56,7 +54,7 @@ Event the notify the user of an unknown command being used
 async def on_command_error(ctx, error):
     if(isinstance(error, CommandNotFound)):
         await ctx.send("Unknown command")
-        await ctx.send("Valid commands are: start, stop, get, whitelist, unwhitelist")
+        await ctx.send("Valid commands are: start, stop, get, add, remove")
 
 """
 Logs the attendance data whenever someone joins or leaves the specific voice channel, ignoring other voice state updates
@@ -89,7 +87,7 @@ async def start(ctx, *, channel):
     global isListening
     global startTime
 
-    if(ctx.author.id in whitelistedUsers):                                                                      # check for permission
+    if(ctx.author.id in whitelistedUsers or (685303937611333648 in [role.id for role in ctx.author.roles])):    # check for permission - user either has "EBoard" role or is whitelisted
         if(not isListening):
             channelName = channel.upper()
             listeningChannel = bot.get_channel(IEEEVoiceChannels.get(channelName))
@@ -130,7 +128,7 @@ async def stop(ctx, *, title):
     global stopTime
     global IEEEKnownUsers
 
-    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
+    if(ctx.author.id in whitelistedUsers or (685303937611333648 in [role.id for role in ctx.author.roles])):    # check for permission - user either has "EBoard" role or is whitelisted
         if(isListening):
             attendanceData = open("attendance.txt", "w")
             stopTime = datetime.datetime.now()
@@ -166,10 +164,11 @@ async def stop(ctx, *, title):
                 for leaveTime in entry.leaveTimes:
                     attendanceData.write("\t" + str(leaveTime) + "\n")
 
-                joinTimeAvg = pandas.Series(entry.joinTimes).mean()                                             # calculate averages of join and leave times for more accurate estimated attendance
-                leaveTimeAvg = pandas.Series(entry.leaveTimes).mean()
+                totalTime = datetime.datetime.min
+                for join, leave in zip(entry.joinTimes, entry.leaveTimes):                                      # calculate total attendance time by subtracting every leave from its join
+                    totalTime += leave - join
                 
-                attendanceData.write("\nEstimated Attendance Time: " + str(leaveTimeAvg - joinTimeAvg)[7:22] + "\n")
+                attendanceData.write("\nEstimated Attendance Time: " + str(totalTime)[11:] + "\n")
                 attendanceData.write("==================================================\n")
             
             isListening = False
@@ -199,7 +198,7 @@ Sends the most recent attendance data file to the command author if they have pe
 """
 @bot.command(name = "get")
 async def get(ctx):
-    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
+    if(ctx.author.id in whitelistedUsers or (685303937611333648 in [role.id for role in ctx.author.roles])):    # check for permission - user either has "EBoard" role or is whitelisted
         with open("attendance.txt", "rb") as file:                                                              # sends the most recent file to the author who ran the command through DM
             await ctx.send("Attendance data sent to {}".format(ctx.author.mention))
             await ctx.author.send("Attendance File: ", file = discord.File(file, "attendance.txt"))
@@ -210,11 +209,11 @@ async def get(ctx):
 """
 Give a user permission to run bot commands
 """
-@bot.command(name = "whitelist")
-async def whitelist(ctx, userID):
+@bot.command(name = "add")
+async def add(ctx, userID):
     global whitelistedUsers
 
-    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
+    if(ctx.author.id in whitelistedUsers or (685303937611333648 in [role.id for role in ctx.author.roles])):    # check for permission - user either has "EBoard" role or is whitelisted
         if(int(userID) in whitelistedUsers):
             await ctx.send("{} is already whitelisted".format(bot.get_user(int(userID))))
         elif(bot.get_user(int(userID)) is not None):
@@ -225,19 +224,19 @@ async def whitelist(ctx, userID):
     else:
         await ctx.send("Permission denied")
 
-@whitelist.error
+@add.error
 async def whitelistError(ctx, error):
     if(isinstance(error, MissingRequiredArgument)):
-        await ctx.send("Missing argument in: #whitelist [user id]")
+        await ctx.send("Missing argument in: #add [user id]")
 
 """
 Remove a users permission to run bot commands
 """
-@bot.command(name = "unwhitelist")
-async def unwhitelist(ctx, userID):
+@bot.command(name = "remove")
+async def remove(ctx, userID):
     global whitelistedUsers
 
-    if(ctx.author.id in whitelistedUsers):                                                                      # checks for permission
+    if(ctx.author.id in whitelistedUsers or (685303937611333648 in [role.id for role in ctx.author.roles])):    # check for permission - user either has "EBoard" role or is whitelisted
         if(bot.get_user(int(userID)) is not None):
             if(int(userID) not in whitelistedUsers):
                 await ctx.send("{} is not on the whitelist".format(bot.get_user(int(userID))))
@@ -253,9 +252,9 @@ async def unwhitelist(ctx, userID):
     else:
         await ctx.send("Permission denied")
 
-@unwhitelist.error
+@remove.error
 async def unwhitelistError(ctx, error):
     if(isinstance(error, MissingRequiredArgument)):
-        await ctx.send("Missing argument in: #unwhitelist [user id]")
+        await ctx.send("Missing argument in: #remove [user id]")
 
 bot.run(TOKEN)
