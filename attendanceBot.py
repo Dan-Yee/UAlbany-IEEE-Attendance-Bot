@@ -1,7 +1,7 @@
 import discord
 from discord import user
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 from discord.ext import commands
 from discord.ext.commands.errors import MissingRequiredArgument, CommandNotFound
